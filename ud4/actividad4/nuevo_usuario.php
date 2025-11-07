@@ -1,4 +1,5 @@
 <?php
+//http://localhost/2do_servidor/ud4/actividad4/nuevo_usuario.php
 require_once __DIR__ . '/../actividad1/conexion.php'; // aquí ya se crea el pdo
 
 $errors = [];
