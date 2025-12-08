@@ -1,6 +1,7 @@
 # UD 4
 
 - [UD 4](#ud-4)
+  - [Act_API_rest](#act_api_rest)
   - [creacion de la base de datos](#creacion-de-la-base-de-datos)
   - [/actividad1](#actividad1)
     - [1. config.php](#1-configphp)
@@ -22,6 +23,65 @@
     - [usuarios\_lista.php](#usuarios_listaphp)
     - [editar\_usuario.php](#editar_usuariophp)
     - [eliminar\_usuario.php](#eliminar_usuariophp)
+
+
+## Act_API_rest
+
+Para la realización de esta actividad, seguí el proceso de desarrollo de una API REST básica, validando paso a paso con Postman. A continuación, detallo el flujo de trabajo y las pruebas realizadas.
+
+### 1. Verificación del GET (Listar Empleados)
+
+Primero, establecimos el objetivo de verificar que el método GET funcionara correctamente para listar los empleados.
+![Objetivo GET](assets/apirest1.png)
+
+Una vez configurado, procedimos a ejecutar la petición en Postman. Como se observa a continuación, la petición fue exitosa y devolvió el JSON con los empleados.
+![Ejecución GET Exitosa](assets/paso1.png)
+
+### 2. Verificación del POST (Crear Empleado) y Solución de Errores
+
+El siguiente paso fue configurar la petición para el método POST, necesario para insertar nuevos registros en la base de datos.
+![Configuración POST](assets/paso2.png)
+
+Al intentar ejecutar esta petición inicial, nos encontramos con un error `400 Bad Request`. Esto se debió a que intentamos acceder usando un método o formato que la API no estaba preparada para manejar por defecto (conflicto entre JSON raw y form-data).
+![Error 400 en POST](assets/apirest3.png)
+
+**Solución y Verificación Final**:
+
+Para solucionar el error `400 Bad Request`, modificamos el archivo `api.php`. El error original ocurría porque Postman, al enviar datos como `x-www-form-urlencoded` o `form-data`, no estaba siendo interpretado correctamente por nuestro código, que solo esperaba un JSON raw (`php://input`).
+
+Implementamos una solución de "fallback": si la lectura del JSON falla o está vacía, el código intenta leer de la variable superglobal standard `$_POST`.
+
+```php
+    case 'POST':
+        // Leer el body JSON
+        $inputJSON = file_get_contents('php://input');
+        $input = json_decode($inputJSON, true);
+
+        // Si no es un JSON válido o está vacío, probar con $_POST (form-data o x-www-form-urlencoded)
+        if (json_last_error() !== JSON_ERROR_NONE || empty($input)) {
+            $input = $_POST;
+        }
+```
+
+Adicionalmente, detectamos que la base de datos utilizaba la columna `salario`, mientras que el script intentaba insertar en `sueldo`. Corregimos la consulta SQL para mapear correctamente el valor recibido:
+
+```php
+$sql = "INSERT INTO empleados (nombre, puesto, salario) VALUES (:nombre, :puesto, :sueldo)";
+```
+
+Finalmente, nos encontramos con que la IA de Postman sugería campos incorrectos (ej. `name` en lugar de `nombre`). Para facilitar la depuración, mejoramos la validación de la API para devolver detalles específicos sobre qué campos faltaban:
+
+```php
+    // Validación detallada de campos
+    $missingFields = [];
+    if (!isset($input['nombre'])) $missingFields[] = 'nombre';
+    // ...
+```
+
+Gracias a esto, pudimos corregir el JSON de entrada en Postman y realizar la inserción correctamente.
+
+![solucion_error_post](assets/solucion_error_post.png)
+
 
 
 ## creacion de la base de datos

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+
+        #loading {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Lista de Empleados</h1>
+    <button id="btn-recargar">Recargar Lista</button>
+    <div id="loading">Cargando...</div>
+    <ul id="lista-empleados"></ul>
+
+    <h2>Añadir Empleado</h2>
+    <form id="form-empleado">
+        <label>Nombre: <input type="text" id="nombre" required></label><br><br>
+        <label>Puesto: <input type="text" id="puesto" required></label><br><br>
+        <label>Sueldo: <input type="number" id="sueldo" step="0.01" required></label><br><br>
+        <button type="submit">Guardar</button>
+    </form>
+    <div id="mensaje"></div>
+
+    <script>
+        const listaEmpleados = document.getElementById('lista-empleados');
+        const loading = document.getElementById('loading');
+        const mensaje = document.getElementById('mensaje');
+
+        function cargarEmpleados() {
+            loading.style.display = 'block';
+            listaEmpleados.innerHTML = '';
+
+            fetch('api.php?recurso=empleados')
+                .then(response => response.json())
+                .then(empleados => {
+                    loading.style.display = 'none';
+                    if (empleados.error) {
+                        mensaje.textContent = empleados.error;
+                        mensaje.className = 'error';
+                        return;
+                    }
+                    empleados.forEach(emp => {
+                        const li = document.createElement('li');
+                        li.textContent = `${emp.nombre} - ${emp.puesto} (${emp.salario}€)`;
+                        listaEmpleados.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    loading.style.display = 'none';
+                    console.error('Error al cargar empleados:', error);
+                    mensaje.textContent = 'Error al cargar empleados';
+                    mensaje.className = 'error';
+                });
+        }
+
+        document.getElementById('btn-recargar').addEventListener('click', cargarEmpleados);
+
+        document.getElementById('form-empleado').addEventListener('submit', function (e) {
+            e.preventDefault();
+            mensaje.textContent = '';
+
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                puesto: document.getElementById('puesto').value,
+                sueldo: document.getElementById('sueldo').value
+            };
+
+            fetch('api.php?recurso=empleados', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'ok') {
+                        mensaje.textContent = 'Empleado creado correctamente (ID: ' + result.id + ')';
+                        mensaje.className = 'success';
+                        document.getElementById('form-empleado').reset();
+                        cargarEmpleados();
+                    } else {
+                        mensaje.textContent = result.error || 'Error desconocido';
+                        mensaje.className = 'error';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mensaje.textContent = 'Error al guardar empleado';
+                    mensaje.className = 'error';
+                });
+        });
+
+        // Cargar al inicio
+        cargarEmpleados();
+    </script>
+</body>
+
+</html>
