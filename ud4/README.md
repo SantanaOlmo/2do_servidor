@@ -32,17 +32,21 @@ Para la realización de esta actividad, seguí el proceso de desarrollo de una A
 ### 1. Verificación del GET (Listar Empleados)
 
 Primero, establecimos el objetivo de verificar que el método GET funcionara correctamente para listar los empleados.
+
 ![Objetivo GET](assets/apirest1.png)
 
 Una vez configurado, procedimos a ejecutar la petición en Postman. Como se observa a continuación, la petición fue exitosa y devolvió el JSON con los empleados.
+
 ![Ejecución GET Exitosa](assets/paso1.png)
 
 ### 2. Verificación del POST (Crear Empleado) y Solución de Errores
 
 El siguiente paso fue configurar la petición para el método POST, necesario para insertar nuevos registros en la base de datos.
+
 ![Configuración POST](assets/paso2.png)
 
 Al intentar ejecutar esta petición inicial, nos encontramos con un error `400 Bad Request`. Esto se debió a que intentamos acceder usando un método o formato que la API no estaba preparada para manejar por defecto (conflicto entre JSON raw y form-data).
+
 ![Error 400 en POST](assets/apirest3.png)
 
 **Solución y Verificación Final**:
